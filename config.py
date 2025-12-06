@@ -9,14 +9,14 @@
 # "key":"9T2q394M92", "telegram":"-1001298977502", "discord":"789842349670960670/BFeBBrCt-w2Z9RJ2wlH6TWUjM5bJuC29aJaJ5OQv9sE6zCKY_AlOxxFwRURkgEl852s3", "msg":"Long #{{ticker}} at `{{close}}`"
 # }
 
-sec_key = (
+sec_key = (168168168168168
     ""  # Can be anything. Has to match with "key" in your TradingView alert message
 )
 
 # Telegram Settings
 send_telegram_alerts = False
-tg_token = ""  # Bot token. Get it from @Botfather
-channel = 0  # Channel ID (ex. -1001487568087)
+tg_token = "1490895893:AAGJ2BT1ar1-2jlfIeMN-4M6LNHnDXzc9h8"  # Bot token. Get it from @Botfather
+channel = -1003477037501  # Channel ID (ex. -1001487568087)
 
 # Discord Settings
 send_discord_alerts = False
@@ -43,3 +43,4 @@ email_port = 465  # SMTP SSL Port (ex. 465)
 email_host = ""  # SMTP host (ex. smtp.gmail.com)
 email_user = ""  # SMTP Login credentials
 email_password = ""  # SMTP Login credentials
+
