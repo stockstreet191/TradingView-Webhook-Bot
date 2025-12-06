@@ -1,46 +1,35 @@
-# ----------------------------------------------- #
-# Plugin Name           : TradingView-Webhook-Bot #
-# Author Name           : fabston                 #
-# File Name             : main.py                 #
-# ----------------------------------------------- #
-
-from handler import send_alert
-import config
-import time
-from flask import Flask, request, jsonify
+from flask import Flask, request
+import telegram
+import asyncio
+import os
 
 app = Flask(__name__)
 
+TOKEN = os.getenv("TELEGRAM_TOKEN") or "YOUR_TOKEN_HERE"  # Render 环境变量或 config.py
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or "-1001234567890"
 
-def get_timestamp():
-    timestamp = time.strftime("%Y-%m-%d %X")
-    return timestamp
+bot = telegram.Bot(token=TOKEN)
 
-
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    whitelisted_ips = ['52.89.214.238', '34.212.75.30', '54.218.53.128', '52.32.178.7']
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    if client_ip not in whitelisted_ips:
-        return jsonify({'message': 'Unauthorized'}), 401
+async def send_telegram(message):
     try:
-        if request.method == "POST":
-            data = request.get_json()
-            if data["key"] == config.sec_key:
-                print(get_timestamp(), "Alert Received & Sent!")
-                send_alert(data)
-                return jsonify({'message': 'Webhook received successfully'}), 200
-
-            else:
-                print("[X]", get_timestamp(), "Alert Received & Refused! (Wrong Key)")
-                return jsonify({'message': 'Unauthorized'}), 401
-
+        await bot.send_message(chat_id=CHAT_ID, text=message, parse_mode='HTML', disable_web_page_preview=True)
     except Exception as e:
-        print("[X]", get_timestamp(), "Error:\n>", e)
-        return jsonify({'message': 'Error'}), 400
+        print(f"Telegram error: {e}")
 
+@app.route('/', methods=['GET'])
+def index():
+    return "TradingView → Telegram Bot is running!"
 
-if __name__ == "__main__":
-    from waitress import serve
+@app.route('/', methods=['POST'])
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    if request.method == 'POST':
+        data = request.get_json(force=True)
+        message = str(data.get('message', '') or data)
+        asyncio.run(send_telegram(message))
+        return 'OK', 200
+    return 'Send POST to this URL', 400
 
-    serve(app, host="0.0.0.0", port=8080)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
