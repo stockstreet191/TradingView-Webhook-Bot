@@ -32,14 +32,18 @@ def tv2025():   # 原来是 def webhook():
     if request.method == 'GET':
         return 'OK', 200
 
- # 密钥校验 —— 必须完整保留这三行！！！
-    secret = os.getenv("WEBHOOK_SECRET")
+ secret = os.getenv("WEBHOOK_SECRET")
     if secret and request.args.get('key') != secret:
         abort(403)
 
-    data = request.get_json(force=True, silent=True)
-    if not data:
-        abort(400)
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+    # 新增兼容代码（直接粘贴覆盖）
+    if request.is_json:
+        data = request.get_json(force=True, silent=True) or {}
+    else:
+        raw_text = request.data.decode('utf-8').strip()
+        data = {"message": raw_text if raw_text else "TradingView 警报已触发"}
+    # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
     message = f"TradingView 警报已触发！\n时间：{data.get('time', '')}\n内容：{str(data)}"
 
