@@ -27,8 +27,8 @@ async def send_message(text: str):
 def index():
     return "Bot 运行中 ✅"
 
-@app.route('/webhook', methods=['GET', 'POST'])
-def webhook():
+@app.route('/tv2025', methods=['GET', 'POST'])   # 改成这个新名字！
+def tv2025():   # 原来是 def webhook():
     if request.method == 'GET':
         return 'OK', 200
 
