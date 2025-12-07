@@ -18,17 +18,33 @@ async def send_telegram(message):
 
 @app.route('/', methods=['GET'])
 def index():
-    return "TradingView → Telegram Bot is running!"
+    return "TradingView → Telegram Bot is running！"
 
-@app.route('/', methods=['POST'])
-@app.route('/webhook', methods=['POST'])
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
+# 关键修改开始：把原来的两行 @app.route 合并成这一段
+@app.route('/webhook', methods=['GET', 'POST'])   # ← 重点：加上 GET！
 def webhook():
+    # 如果是 GET 请求（Render 健康检查或浏览器访问），直接返回 OK
+    if request.method == 'GET':
+        return 'OK', 200
+
+    # 下面才是真正的 TradingView POST 警报
     if request.method == 'POST':
-        data = request.get_json(force=True)
-        message = str(data.get('message', '') or data)
+        # 密钥校验（你已经设置了 WEBHOOK_SECRET）
+        secret = os.getenv("WEBHOOK_SECRET")
+        if secret and request.args.get('key') != secret:
+            return 'Forbidden', 403
+
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return 'Bad request', 400
+
+        # 这里你可以后期改成美化模板，现在先保持原始输出
+        message = str(data)
         asyncio.run(send_telegram(message))
         return 'OK', 200
-    return 'Send POST to this URL', 400
+# 关键修改结束
+# ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
