@@ -5,7 +5,7 @@ import os
 
 app = Flask(__name__)
 
-TOKEN = os.getenv("TELEGRAM_TOKEN") or "YOUR_TOKEN_HERE"  # Render 环境变量或 config.py
+TOKEN = os.getenv("TELEGRAM_TOKEN") or "1490895893:AAGJ2BT1ar1-2jlfIeMN-4M6LNHnDXzc9h8"  # Render 环境变量或 config.py
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID") or "-1001234567890"
 
 bot = telegram.Bot(token=TOKEN)
