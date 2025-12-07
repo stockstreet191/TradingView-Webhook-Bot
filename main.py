@@ -32,7 +32,9 @@ def tv2025():   # 原来是 def webhook():
     if request.method == 'GET':
         return 'OK', 200
 
-    if os.getenv("WEBHOOK_SECRET") and request.args.get('key') != os.getenv("WEBHOOK_SECRET"):
+ # 密钥校验 —— 必须完整保留这三行！！！
+    secret = os.getenv("WEBHOOK_SECRET")
+    if secret and request.args.get('key') != secret:
         abort(403)
 
     data = request.get_json(force=True, silent=True)
