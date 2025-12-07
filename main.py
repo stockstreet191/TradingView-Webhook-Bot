@@ -39,7 +39,7 @@ def tv2025():   # 原来是 def webhook():
     if not data:
         abort(400)
 
-    message = f"<pre>{str(data)}</pre>"
+    message = f"TradingView 警报已触发！\n时间：{data.get('time', '')}\n内容：{str(data)}"
 
     # 关键：用 get_event_loop 代替 asyncio.run（Render 环境下唯一稳发方式）
     loop = asyncio.get_event_loop()
