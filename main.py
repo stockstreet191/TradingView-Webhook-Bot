@@ -47,6 +47,7 @@ def webhook():
 
     return 'OK', 200
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+# Render 用 gunicorn 启动，不需要这几行
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 10000))
+#     app.run(host='0.0.0.0', port=port)
