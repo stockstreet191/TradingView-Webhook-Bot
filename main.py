@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 TOKEN = os.getenv("TELEGRAM_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")      # 现在是 510572692（你的私聊）
-WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
+
 
 if not TOKEN or not CHAT_ID:
     raise RuntimeError("请设置 TELEGRAM_TOKEN 和 TELEGRAM_CHAT_ID")
@@ -32,7 +32,7 @@ def tv2025():   # 原来是 def webhook():
     if request.method == 'GET':
         return 'OK', 200
 
-    if WEBHOOK_SECRET and request.args.get('key') != WEBHOOK_SECRET:
+    if os.getenv("WEBHOOK_SECRET") and request.args.get('key') != os.getenv("WEBHOOK_SECRET"):
         abort(403)
 
     data = request.get_json(force=True, silent=True)
