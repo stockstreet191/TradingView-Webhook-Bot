@@ -77,13 +77,14 @@ def index():
     return "TradingView → Telegram + 调试版自动截图 Bot 运行中"
 
 @app.route('/tv2025', methods=['GET', 'POST'])
-async def tv2025():                        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←← 关键！加 async
+def tv2025():  # 改回 def（不加 async）
     if request.method == 'GET':
         return 'OK', 200
 
     # 密钥校验
     secret = os.getenv("WEBHOOK_SECRET")
     if secret and request.args.get('key') != secret:
+        print("[DEBUG] 密钥错误")
         abort(403)
 
     # 兼容 JSON 和纯文本
@@ -93,39 +94,43 @@ async def tv2025():                        # ←←←←←←←←←←←�
         raw_text = request.data.decode('utf-8').strip()
         data = {"message": raw_text if raw_text else "TradingView 警报触发"}
 
-    # ==================== 强制发图终极版（Premium 会员专属）===================
+    # ========= 强制发图终极版（同步包装）=========
     text = data.get('message', str(data))
-    photo_url = (
-        data.get('plot_0') or
-        data.get('screenshot') or
-        data.get('plot.snapshot') or
-        data.get('image')
-    )
+    photo_url = data.get('plot_0') or data.get('screenshot') or data.get('plot.snapshot')
 
     print(f"[DEBUG] 提取到图片链接: {photo_url}")
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
     if photo_url and photo_url.startswith('http'):
         try:
             response = requests.get(photo_url, timeout=25)
             if response.status_code == 200 and len(response.content) > 15000:
-                await bot.send_photo(
-                    chat_id=CHAT_ID,
-                    photo=BytesIO(response.content),
-                    caption=text[:1024],
-                    parse_mode='HTML'
+                loop.run_until_complete(
+                    bot.send_photo(
+                        chat_id=CHAT_ID,
+                        photo=BytesIO(response.content),
+                        caption=text[:1024],
+                        parse_mode='HTML'
+                    )
                 )
                 print("[DEBUG] 高清图发送成功！")
+                loop.close()
                 return 'OK', 200
         except Exception as e:
             print(f"[DEBUG] 发图失败: {e}")
 
     # 没图就发文字
-    await bot.send_message(
-        chat_id=CHAT_ID,
-        text=text[:4000],
-        parse_mode='HTML',
-        disable_web_page_preview=False
+    loop.run_until_complete(
+        bot.send_message(
+            chat_id=CHAT_ID,
+            text=text[:4000],
+            parse_mode='HTML',
+            disable_web_page_preview=False
+        )
     )
-    # =====================================================================
+    loop.close()
+    # ====================================================
 
     return 'OK', 200
