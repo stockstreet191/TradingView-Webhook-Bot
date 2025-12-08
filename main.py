@@ -96,9 +96,46 @@ def tv2025():
         raw_text = request.data.decode('utf-8').strip()
         data = {"message": raw_text if raw_text else "TradingView 警报触发"}
 
-    # 发送
+    # ==================== 强制发图终极版（Premium 会员专属）===================
+    text = data.get('message', str(data))
+    photo_url = (
+        data.get('plot_0') or
+        data.get('screenshot') or
+        data.get('plot.snapshot') or
+        data.get('image')
+    )
+
+    print(f"[DEBUG] 提取到文字: {text[:100]}")
+    print(f"[DEBUG] 提取到图片链接: {photo_url}")
+
+    if photo_url and photo_url.startswith('http'):
+        try:
+            print("[DEBUG] 开始下载高清图...")
+            response = requests.get(photo_url, timeout=25)
+            if response.status_code == 200 and len(response.content) > 15000:  # 过滤小图
+                print("[DEBUG] 下载成功，正在发送高清图...")
+                loop = asyncio.get_event_loop()
+                await bot.send_photo(
+                    chat_id=CHAT_ID,
+                    photo=BytesIO(response.content),
+                    caption=text[:1024],  # 图片说明
+                    parse_mode='HTML'
+                )
+                print("[DEBUG] 高清图发送成功！")
+                return 'OK', 200
+        except Exception as e:
+            print(f"[DEBUG] 发图失败，降级发文字: {e}")
+
+    # 没图或发图失败 → 发文字
+    print("[DEBUG] 发文字消息")
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(send_alert(data))
+    await bot.send_message(
+        chat_id=CHAT_ID,
+        text=text[:4000],
+        parse_mode='HTML',
+        disable_web_page_preview=False
+    )
+    # =====================================================================
 
     print("[DEBUG] 处理完成，返回 OK")
     return 'OK', 200
