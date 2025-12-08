@@ -15,8 +15,8 @@ WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 if not TOKEN or not CHAT_ID:
     raise RuntimeError("请设置 TOKEN 和 CHAT_ID")
 
-# 关键修复：加大连接池 + 超时，解决 Pool timeout
-bot = Bot(token=TOKEN, request_kwargs={'pool_timeout': 60, 'connection_pool_size': 20})
+# 兼容所有版本的 Bot 初始化（v20+ 不用 request_kwargs）
+bot = Bot(token=TOKEN)
 
 @app.route('/', methods=['GET'])
 def index():
@@ -75,7 +75,11 @@ def tv2025():
             )
         )
     except Exception as e:
-        print(f"[ERROR] 发文字也失败: {e}")
+        print(f"[ERROR] 发文字失败: {e}")
 
     loop.close()
     return 'OK', 200
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
