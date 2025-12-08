@@ -77,17 +77,14 @@ def index():
     return "TradingView → Telegram + 调试版自动截图 Bot 运行中"
 
 @app.route('/tv2025', methods=['GET', 'POST'])
-def tv2025():
+async def tv2025():                        # ←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←←← 关键！加 async
     if request.method == 'GET':
         return 'OK', 200
 
     # 密钥校验
     secret = os.getenv("WEBHOOK_SECRET")
     if secret and request.args.get('key') != secret:
-        print(f"[DEBUG] 密钥校验失败: 传入 {request.args.get('key')[:10]}..., 期望 {secret[:10]}...")
         abort(403)
-
-    print("[DEBUG] 密钥校验通过，开始处理数据")
 
     # 兼容 JSON 和纯文本
     if request.is_json:
@@ -105,30 +102,24 @@ def tv2025():
         data.get('image')
     )
 
-    print(f"[DEBUG] 提取到文字: {text[:100]}")
     print(f"[DEBUG] 提取到图片链接: {photo_url}")
 
     if photo_url and photo_url.startswith('http'):
         try:
-            print("[DEBUG] 开始下载高清图...")
             response = requests.get(photo_url, timeout=25)
-            if response.status_code == 200 and len(response.content) > 15000:  # 过滤小图
-                print("[DEBUG] 下载成功，正在发送高清图...")
-                loop = asyncio.get_event_loop()
+            if response.status_code == 200 and len(response.content) > 15000:
                 await bot.send_photo(
                     chat_id=CHAT_ID,
                     photo=BytesIO(response.content),
-                    caption=text[:1024],  # 图片说明
+                    caption=text[:1024],
                     parse_mode='HTML'
                 )
                 print("[DEBUG] 高清图发送成功！")
                 return 'OK', 200
         except Exception as e:
-            print(f"[DEBUG] 发图失败，降级发文字: {e}")
+            print(f"[DEBUG] 发图失败: {e}")
 
-    # 没图或发图失败 → 发文字
-    print("[DEBUG] 发文字消息")
-    loop = asyncio.get_event_loop()
+    # 没图就发文字
     await bot.send_message(
         chat_id=CHAT_ID,
         text=text[:4000],
@@ -137,5 +128,4 @@ def tv2025():
     )
     # =====================================================================
 
-    print("[DEBUG] 处理完成，返回 OK")
     return 'OK', 200
